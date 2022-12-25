@@ -32,6 +32,13 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/WISE-Developers/WISE_Java_API</url>
+    </repository>
+  </distributionManagement>
   
   <build>
     <finalName>WISE_JavaAPI</finalName>
