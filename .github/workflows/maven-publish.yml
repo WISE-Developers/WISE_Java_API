@@ -30,7 +30,7 @@ jobs:
       shell: pwsh
       run: |
         $versions = ConvertFrom-StringData (Get-Content versions/versions.properties -raw)
-        echo "::set-output name=prometheus_version::$($versions.prometheus)"
+        echo "prometheus_version::$($versions.prometheus)" >> $GITHUB_OUTPUT
       
     - name: Update the version
       run: mvn versions:set -DnewVersion=${{ steps.version-numbers.outputs.prometheus_version }}
@@ -49,7 +49,7 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         API_TAG=$(git describe --tags --abbrev=0)
-        echo "::set-output name=last_tag::$API_TAG"
+        echo "last_tag::$API_TAG" >> $GITHUB_OUTPUT
         git tag -a ${{ steps.version-numbers.outputs.prometheus_version }} -m "Release on $(date +'%Y-%m-%d') for commit $(git rev-parse HEAD)"
 
     - name: Create Release Notes
