@@ -30,7 +30,7 @@ jobs:
       shell: pwsh
       run: |
         $versions = ConvertFrom-StringData (Get-Content versions/versions.properties -raw)
-        echo "prometheus_version::$($versions.prometheus)" >> $GITHUB_OUTPUT
+        echo "prometheus_version=$($versions.prometheus)" >> $GITHUB_OUTPUT
       
     - name: Update the version
       run: mvn versions:set -DnewVersion=${{ steps.version-numbers.outputs.prometheus_version }}
