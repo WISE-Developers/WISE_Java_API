@@ -185,6 +185,12 @@ public class Scenario implements IWISESerializable {
 	
 	@Getter @Setter
 	private StopModellingOptions stopModellingOptions;
+	
+	/**
+	 * Options for enabling wind gusts if available in the weather stream.
+	 */
+	@Getter @Setter
+	private GustingOptions gustingOptions;
 
 	/**
 	 * Add a new burning condition.
