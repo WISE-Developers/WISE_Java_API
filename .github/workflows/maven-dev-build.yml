@@ -1,0 +1,82 @@
+name: Maven Developer
+
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v3.3.0
+      with:
+        ref: developer
+        fetch-depth: 0
+    - uses: actions/checkout@v3.3.0
+      with:
+        repository: WISE-Developers/WISE_Versions
+        path: versions
+        ref: developer
+        token: ${{ secrets.WISE_PAT }}
+    - name: Set up JDK 8
+      uses: actions/setup-java@v3
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+        server-id: github
+
+    - name: Load values from versions
+      id: version-numbers
+      shell: pwsh
+      run: |
+        $versions = ConvertFrom-StringData (Get-Content versions/versions.properties -raw)
+        echo "Updating to version $($versions.wise)-dev-$(date +'%Y-%m-%d')_$(date +'%H.%M')"
+        echo "wise_version=$($versions.wise)-dev-$(date +'%Y-%m-%d')_$(date +'%H.%M')" >> $env:GITHUB_OUTPUT      
+    - name: Update the version
+      run: mvn versions:set -DnewVersion=${{ steps.version-numbers.outputs.wise_version }}
+
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+
+    - name: Publish package
+      run: mvn --batch-mode deploy
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+
+    # - name: Tag the repositories
+    #   id: last-tags
+    #   run: |
+    #     git config user.name github-actions
+    #     git config user.email github-actions@github.com
+    #     LAST_TAG=$(git describe --abbrev=0 --tags)
+    #     echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+    #     git tag -a ${{ steps.version-numbers.outputs.wise_version }} -m "Release on $(date +'%Y-%m-%d') for commit $(git rev-parse HEAD)"
+  
+    # - name: Push changes
+    #   uses: ad-m/github-push-action@master
+    #   with:
+    #     tags: true
+
+    # - name: Create Release Notes
+    #   id: api-notes
+    #   uses: mikepenz/release-changelog-builder-action@v3.5.0
+    #   with:
+    #     owner: WISE-Developers
+    #     repo: WISE_Java_API
+    #     toTag: ${{ steps.version-numbers.outputs.wise_version }}
+    #     fromTag: ${{ steps.last-tags.outputs.last_tag }}
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.WISE_PAT }}
+    
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: ${{ steps.version-numbers.outputs.wise_version }}
+        body: ${{ steps.api-notes.outputs.changelog }}
+        prerelease: true
+        files: target/*.jar
+        tag_name: refs/tags/${{ steps.version-numbers.outputs.wise_version }}
